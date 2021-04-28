@@ -5,7 +5,9 @@ import cats.data.State
 import cats.free._
 
 /*
- * Comprises Examples 3.2.2, 3.3.1, and 3.3.2
+ * Comprises Examples 3.2.2, 3.3.1, and 3.3.2.
+ * These examples revisit Example 0.0.3 under the light of the free monad.
+ *
  * Adapted from: https://gist.github.com/msiegenthaler/a5d8a2db7cedd0fd6b93
  */
 
