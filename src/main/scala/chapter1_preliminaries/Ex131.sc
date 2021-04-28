@@ -33,3 +33,8 @@ val plus1: Int => Int = curriedAdd(1) // Same as add1
 
 plus1(0) // 1
 plus1(1) // 2
+
+/*
+From the product-hom adjunction perspective, we say that:
+  "lazyAdd (or curriedAdd) is the adjunct (or transpose) of add"
+ */
