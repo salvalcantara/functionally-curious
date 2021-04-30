@@ -33,7 +33,7 @@ object Ex222 {
 
   def eval2: Algebra[ExpressionF, String] = {
     case Add(x, y) => s"$x + $y"
-    case Mul(x, y) => s"$x*$y"
+    case Mul(x, y) => s"$x * $y"
     case Neg(x)    => s"-$x"
     case Zero      => "0"
     case One       => "1"

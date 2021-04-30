@@ -20,12 +20,12 @@ def headOption[A]: List[A] => Option[A] = {
   case Nil => None // Nil is the empty list, or List()
 }
 
-headOption(List(1,2,3)) // Some(1)
-headOption(List("1","2","3")) // Some("1")
+headOption(List(1, 2, 3))       // Some(1)
+headOption(List("1", "2", "3")) // Some("1")
 
 /*
 As a matter of fact, headOption is part of the Scala standard library and one can simply do:
  */
 
-List(1,2,3).headOption // Some(1)
+List(1,2,3).headOption         // Some(1)
 List("1", "2", "3").headOption // Some("1")

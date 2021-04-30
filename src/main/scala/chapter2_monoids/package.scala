@@ -3,7 +3,7 @@ import cats.Functor
 package object chapter2_monoids {
 
   /*
-  Fix and unFix (or Lambek's lemma)
+  Fix and unFix (or Lambek's lemma) - Snippet 2.6
    */
 
   case class Fix[F[_]](x: F[Fix[F]])
@@ -16,7 +16,7 @@ package object chapter2_monoids {
   type Algebra[F[_], A] = F[A] => A
 
   /*
-  Definition catamorphism, or cata, in both short/long forms
+  Definition of catamorphism, or cata, in both short/long forms - Snippet 2.7
    */
 
   def cata[F[_]:Functor, A](eval: F[A] => A): Fix[F] => A =

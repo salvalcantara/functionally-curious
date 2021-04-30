@@ -15,7 +15,5 @@ def unit[A]: A => Unit = _ => () // _ means "whatever"
 This function, unit, returns () for whatever input value we supply.
  */
 
-unit(1) // ()
+unit(1)      // ()
 unit("asdf") // ()
-
-

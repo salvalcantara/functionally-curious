@@ -7,7 +7,7 @@ val y: Vector[Float] = Vector(4, 5, 6)
 
 // Imperative solution
 var sum: Float = 0
-for (i <- 0 until x.size)
+for (i <- 0 until 3)
   sum += x(i) * y(i)
 sum
 

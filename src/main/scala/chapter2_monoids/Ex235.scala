@@ -21,15 +21,15 @@ object Ex235 {
    */
 
   implicit def functorListF[A]: Functor[ListF[A, *]] = new Functor[ListF[A, *]] {
-    def map[R, S](fa: ListF[A, R])(f: R => S): ListF[A, S] = fa match {
+    def map[R, S](la: ListF[A, R])(f: R => S): ListF[A, S] = la match {
       case ConsF(head, tail) => ConsF(head, f(tail))
       case NilF              => NilF
     }
   }
 
   def eval: Algebra[ListF[Int, *], Int] = {
-    case ConsF(h, t)   => h + t
-    case NilF          => 0
+    case ConsF(head, tail)   => head + tail
+    case NilF                => 0
   }
 
   /*
@@ -76,8 +76,7 @@ object Ex235 {
     println(result2)
 
     /*
-    Of course, one can simply rely on the definitions and methods built in the Scala standard
-    library
+    Of course, one can simply rely on the Scala standard library
      */
 
     val list3 = List(1, 2, 3)

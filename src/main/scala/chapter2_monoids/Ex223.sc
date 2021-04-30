@@ -22,8 +22,7 @@ val expr: Fix[ExpressionF] =
   ))
 
 /*
-Albeit not very practical, we can generate arbitrary elements (or literals) by repeatedly adding
-one:
+Albeit not very practical, we can generate arbitrary elements/literals by repeatedly adding one
  */
 
 val one:   Fix[ExpressionF] = Fix[ExpressionF](One)
