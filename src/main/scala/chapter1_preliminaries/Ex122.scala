@@ -15,7 +15,7 @@ object Ex122 {
   }
 
   /*
-The following pair of functions "prove" the Co-Yoneda lemma:
+  The following pair of functions "prove" the Co-Yoneda lemma:
   "Coyoneda[F, A] is isomorphic to F[A]"
  */
 
