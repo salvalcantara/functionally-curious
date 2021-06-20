@@ -10,13 +10,17 @@ Here we provide another simple implementation (in MyFreeCI) for Free which makes
 Coyoneda trick. In particular, the user does not even need to worry about this. Essentially, MyFreeCI.Free[F, A]
 is equivalent to MyFreeCE.FreeC[F, A] == MyFreeCE.Free[Coyoneda[F, *], A]. For more on the equivalence, see:
 http://blog.higher-order.com/blog/2013/11/01/free-and-yoneda/
+
+The code is along the lines of "Free as in Monads" by Daniel Spiewak: https://www.youtube.com/watch?v=cxMo1RMsD0M, and
+can be regarded as a much simplified version of that in Cats:
+https://github.com/typelevel/cats/blob/main/free/src/main/scala/cats/free/Free.scala
  */
 
 object MyFreeCI {
   sealed trait Free[F[_], A] {
     def flatMap[B](f: A => Free[F, B]): Free[F, B] =
       this match {
-        case Suspend(fi, c) => Suspend(fi, c andThen (_ flatMap f))
+        case Suspend(fa, c) => Suspend(fa, c andThen (_ flatMap f))
         case Pure(a) => f(a)
       }
 
@@ -24,7 +28,7 @@ object MyFreeCI {
   }
 
   final case class Pure[F[_], A](a: A) extends Free[F, A]
-  final case class Suspend[F[_], I, A](fi: F[I], c: I => Free[F, A]) extends Free[F, A]
+  final case class Suspend[F[_], X, A](fx: F[X], c: X => Free[F, A]) extends Free[F, A]
 
   object Free {
     def pure[F[_], A](a: => A): Free[F, A] = Pure[F, A](a)
@@ -33,10 +37,9 @@ object MyFreeCI {
 
     def foldMap[A, F[_], G[_] : Monad](free: Free[F, A])(f: F ~> G): G[A] =
       free match {
-        case Suspend(fi, c) => Monad[G].flatMap(f(fi)) { i => foldMap(c(i))(f) }
+        case Suspend(fa, c) => Monad[G].flatMap(f(fa)) { a => foldMap(c(a))(f) }
         case Pure(a) => Monad[G].pure(a)
       }
-
   }
 }
 

@@ -75,7 +75,6 @@ object MyFreeCE {
 
       foldMap(freeC)(fC)
     }
-
   }
 }
 
