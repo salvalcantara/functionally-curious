@@ -9,9 +9,10 @@ import chapter3_monads.MyFreeCE.Free
 import chapter3_monads.MyFreeCE.Free.{FreeC, foldMapC}
 
 /*
-Instead of relying on the Free data type from Cats as in GreetingApp, here there is a simple implementation
-for Free (inside MyFreeCE) that can be useful for learning purposes. In particular, MyFreeCE.Free introduces
-**explicit** support for the Coyoneda trick via the methods liftFC and foldMapC. There is also the alias:
+Instead of relying on the Free data type from Cats as in GreetingApp, here there is a simple
+implementation for Free (inside MyFreeCE) that can be useful for learning purposes. In particular,
+MyFreeCE.Free introduces **explicit** support for the Coyoneda trick via the methods liftFC and
+foldMapC. There is also the alias:
 - type MyFreeC[F[_], A] = MyFree[Coyoneda[F, *], A]
 for the special Coyoneda trick case. The code is mostly a simplification of that in:
 https://github.com/scalaz/scalaz/blob/v7.1.0/core/src/main/scala/scalaz/Free.scala
