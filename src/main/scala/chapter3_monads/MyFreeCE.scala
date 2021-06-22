@@ -2,11 +2,11 @@ package chapter3_monads
 
 import cats.syntax.flatMap._
 import cats.syntax.functor._
-import cats.{Functor, Monad, ~>}
+import cats.{Functor, Id, Monad, ~>}
 import chapter1_preliminaries.Ex122.{Coyoneda, freeFunctorForCoyoneda, toCoyoneda}
 import chapter3_monads.Greeting.{ConsoleAlg, Println, ProductionInterpreter, Readln}
 import chapter3_monads.MyFreeCE.Free
-import chapter3_monads.MyFreeCE.Free.{FreeC, foldMapC}
+import chapter3_monads.MyFreeCE.Free.{FreeC, foldMap, foldMapC}
 
 /*
 Instead of relying on the Free data type from Cats as in GreetingApp, here there is a simple
@@ -80,7 +80,7 @@ object MyFreeCE {
 }
 
 object GreetingAppMyFreeCE {
-  // Since ConsoleAlg is not a functor, we use MyFreeC in order to get the Coyoneda trick applied
+  // Since ConsoleAlg is not a functor, we use FreeC in order to get the Coyoneda trick applied
   type Console[A] = FreeC[ConsoleAlg, A]
 
   // Smart constructors for lifting the ConsoleAlg operations
@@ -95,5 +95,50 @@ object GreetingAppMyFreeCE {
 
   def main(args: Array[String]): Unit = {
     foldMapC(program)(ProductionInterpreter) // Produces side effects!
+  }
+}
+
+object GreetingAppMyFreeCEWithoutCoyoneda {
+  /*
+  Instead of using the Coyoneda trick, we could of course provide a functor instance for our ADT.
+  For such a purpose, consider the following (slightly different) definition:
+   */
+  sealed trait ConsoleF[A]
+  case class PrintlnF[A](msg: String, v: A) extends ConsoleF[A]
+  case class ReadlnF[A](vf: String => A) extends ConsoleF[A]
+
+  // Functor instance for ConsoleF, which makes the Coyoneda trick unnecessary
+  implicit val consoleFunctor = new Functor[ConsoleF] {
+    override def map[A, B](ca: ConsoleF[A])(f: A => B): ConsoleF[B] = {
+      ca match {
+        case PrintlnF(msg, v) => PrintlnF(msg, f(v))
+        case ReadlnF(vf) => ReadlnF(vf andThen f)
+      }
+    }
+  }
+
+  // Need to redefine the interpreter too
+  object interpreter extends (ConsoleF ~> Id) {
+    override def apply[A](ca: ConsoleF[A]): Id[A] = ca match {
+      case PrintlnF(msg, v) => scala.Console.println(msg); v
+      case ReadlnF(vf) => vf(scala.io.StdIn.readLine())
+    }
+  }
+
+  // Since ConsoleF is a functor, we use Free
+  type Console[A] = Free[ConsoleF, A]
+
+  // Smart constructors for lifting the consoleF operations
+  def println(msg: String): Console[Unit] = Free.liftF(PrintlnF(msg, ()))
+  def readln: Console[String] = Free.liftF(ReadlnF(identity))
+
+  val program: Console[Unit] = for {
+    _     <- println("Please, tell me your name:")
+    name  <- readln
+    _     <- println(s"Hello $name")
+  } yield ()
+
+  def main(args: Array[String]): Unit = {
+    foldMap(program)(interpreter) // Produces side effects!
   }
 }
