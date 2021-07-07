@@ -1,10 +1,10 @@
 package chapter3_monads
 
+import cats.instances.list._
 import cats.{Functor, Id, ~>}
 import chapter3_monads.MonadsAndMonoids.{FunctorComposition, HigherMonoid, Monad}
 
 object MonadsAndMonoids {
-
   /*
   A monad is just a monoid in the category of endofunctors
   —Saunders Mac Lane
@@ -21,15 +21,15 @@ object MonadsAndMonoids {
    */
 
   /*
-  Let's remind the definition of a Monad first (based on flatMap and pure)
+  Let's remind the definition of a Monad first (based on flatten, pure, and map)
    */
   trait Monad[F[_]] extends Functor[F] {
-    def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
+    def flatten[A](ffa: F[F[A]]): F[A]
     def pure[A](a: A): F[A]
+    // map is implied by the "extends Functor[F]"
 
-    // Default implementation of map and flatten in terms of flatMap and pure
-    override def map[A, B](fa: F[A])(f: A => B): F[B] = flatMap(fa)(a => pure(f(a)))
-    def flatten[A](ffa: F[F[A]]): F[A] = flatMap(ffa)(identity)
+    // Default implementation of flatMap in terms of flatten and map
+    def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = flatten(map(fa)(f))
   }
 
   /*
@@ -39,8 +39,8 @@ object MonadsAndMonoids {
     def μ: FxF → F // The so-called "multiplication"
     def η:   I → F // The so-called "unit"
 
-    @inline def combine = μ // The multiplication corresponds to the "combine" operation
-    @inline def empty   = η // The unit corresponds to the "empty" element
+    @inline def combine = μ // The "multiplication" corresponds to the "combine" operation
+    @inline def empty   = η // The "unit" corresponds to the "empty" element
   }
 
   /*
@@ -58,42 +58,36 @@ object MonadsAndMonoids {
    */
 }
 
-object MonadFromHigherMonoid {
+object MonadFromHigherMonoidCont {
   /*
-  Given "a monoid in the category of endofuctors", we can always define a monad.
-
-  By "the category of endofunctors", this is what we mean:
-  - The category where:
-    - objects are endofunctors (F[_]: Functor)
-    - morphisms are natural transformations (~>)
-
-  By "a monoid in the category of endofunctors", this is what we mean:
-  - A class/object
-    - having an F[_]: Functor
-    - and extending HigherMonoid[F, ~>, FunctorComposition[F, F, *], Id]
+  Given "a monoid in the category of endofuctors", we can always define a monad
    */
   abstract class MonadFromHigherMonoid[F[_]: Functor]
     extends HigherMonoid[F, ~>, FunctorComposition[F, F, *], Id] with Monad[F] {
-    /*
-    Requires to implement the HigherMonoid trait: μ and η (combine and empty)
-     */
+    // Requires to implement the HigherMonoid trait: μ and η (combine and empty)
 
     /*
-    Default implementations of the Monad trait (pure and flatMap) in terms of combine and empty
+    Default implementation of the Monad trait (flatten, pure) in terms of combine and empty.
+    In this case, the correspondence is direct:
+    - flatten acts as the combine operation (μ, the "multiplication")
+    - pure acts as the empty element (η, the "unit")
      */
+    def flatten[A](ffa: F[F[A]]): F[A] = combine(ffa)
     def pure[A](a: A): F[A] = empty(a)
-    def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] = combine(Functor[F].map(fa)(f))
+
+    // Default implementation of map based on the Functor[F] at hand
+    override def map[A, B](fa: F[A])(f: A => B): F[B] = Functor[F].map(fa)(f)
   }
 
   /*
   Example for List
    */
   object ListMonad extends MonadFromHigherMonoid[List] {
-    val μ: FunctorComposition[List, List, *] ~> List = new (FunctorComposition[List, List, *] ~> List) {
+    override val μ  = new (FunctorComposition[List, List, *] ~> List) {
       def apply[A](lla: List[List[A]]): List[A] = lla.flatten // call built-in flatten for Lists
     }
 
-    val η: Id ~> List = new (Id ~> List) {
+    override val η = new (Id ~> List) {
       def apply[A](a: Id[A]) = List(a)
     }
   }
@@ -114,7 +108,7 @@ object MonadFromHigherMonoid {
   }
 }
 
-object HigherMonoidFromMonad {
+object HigherMonoidFromMonadCont {
   /*
   And also the other way around, given a monad, we can always define a
   "monoid in the category of endofunctors"
@@ -122,27 +116,30 @@ object HigherMonoidFromMonad {
   abstract class HigherMonoidFromMonad[F[_]: Functor]
     extends Monad[F] with HigherMonoid[F, ~>, FunctorComposition[F, F, *], Id] {
     /*
-    Requires to implement the Monad trait: flatMap and pure
+    Requires to implement the Monad trait: flatten and pure.
+    Since we have a Functor[F], map can be already provided by default (see below).
      */
 
     /*
-    Default implementation of μ and η in terms of flatten (which is defined in terms of flatMap
-    within the Monad trait) and pure
+    Default implementation of μ and η in terms of flatten and pure
      */
-    val μ: FunctorComposition[F, F, *] ~> F = new (FunctorComposition[F, F, *] ~> F) {
+    val μ = new (FunctorComposition[F, F, *] ~> F) {
       def apply[A](fa: F[F[A]]): F[A] = flatten(fa)
     }
 
-    val η: Id ~> F = new (Id ~> F) {
+    val η = new (Id ~> F) {
       def apply[A](a: Id[A]) = pure(a)
     }
+
+    // Default implementation of map based on the Functor[F] at hand
+    override def map[A, B](fa: F[A])(f: A => B): F[B] = Functor[F].map(fa)(f)
   }
 
   /*
   Example for List
    */
   object ListMonad extends HigherMonoidFromMonad[List] {
-    override def flatMap[A, B](la: List[A])(f: A => List[B]): List[B] = la.flatMap(f)
+    override def flatten[A](lla: List[List[A]]): List[A] = lla.flatten
     override def pure[A](a: A): List[A] = List(a)
   }
 
