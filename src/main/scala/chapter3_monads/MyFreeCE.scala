@@ -5,7 +5,7 @@ import cats.syntax.functor._
 import cats.{Functor, Id, Monad, ~>}
 import chapter1_preliminaries.Ex122.{Coyoneda, freeFunctorForCoyoneda, toCoyoneda}
 import chapter3_monads.Greeting.{ConsoleAlg, Println, ProductionInterpreter, Readln}
-import chapter3_monads.MyFreeCE.Free
+import chapter3_monads.MyFreeCE.{Free, Pure, Suspend}
 import chapter3_monads.MyFreeCE.Free.{FreeC, foldMap, foldMapC}
 
 /*
@@ -138,7 +138,18 @@ object GreetingAppMyFreeCEWithoutCoyoneda {
     _     <- println(s"Hello $name")
   } yield ()
 
+  // Basically, program should contain the following AST (or program description as a value)
+  val expectedProgram: Console[Unit] =
+    Suspend(PrintlnF("Please, tell me your name", ()).asInstanceOf[ConsoleF[Unit]].map { _ =>
+      Suspend(ReadlnF(identity).asInstanceOf[ConsoleF[String]].map { name =>
+        Suspend(PrintlnF(s"Hello $name", ()).asInstanceOf[ConsoleF[Unit]].map { _ =>
+          Pure(())
+        })
+      })
+    })
+
   def main(args: Array[String]): Unit = {
     foldMap(program)(interpreter) // Produces side effects!
+    foldMap(expectedProgram)(interpreter) // Should behave identically
   }
 }
