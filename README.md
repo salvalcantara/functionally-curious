@@ -27,6 +27,6 @@ The first version of the book will consist of the FYP thesis document *as it is*
 > You'll get a short (around 50 pages) book where math and code are intertwined in a continuum which leads to
 > Functional Programming explained under the light of categorial thinking—the gist of it!
 
-In subsequent versions I'm probably going to add some appendices, extend the code examples, and migrate all the code to
-Scala 3.
-
+In subsequent versions, I will:
+- Expand on Chapter 3
+- Most probably, also add some appendices and migrate all the code to Scala 3
